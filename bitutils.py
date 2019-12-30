@@ -19,7 +19,7 @@ def extract_timestamp(filename, dt):
 
     mm=re.match("(\d\d)-(\d\d)-(20\d\d)T(\d\d)-(\d\d)-(\d\d)-[sr]1",filename)
     if mm:
-        month, day, year, hour, minute, second = map(int, mm.groups())
+        month, day, year, hour, minute, second = list(map(int, mm.groups()))
         timestamp=datetime.datetime(year,month,day,hour,minute,second)
         timestamp=(timestamp- datetime.datetime(1970,1,1)).total_seconds()
         timestamp+=float(dt)/1000
@@ -52,7 +52,7 @@ def parse_line_to_message(line):
     return {'name': name, 'timestamp':timestamp, 'freq':freq, 'access':access, 'lead_out':lead_out, 'confidence':confidence, 'strength': strength, 'length': length, 'error': error, 'msgtype': msgtype}
 
 def print_message(m):
-    print "RAW:", m['name'], m['freq'], "%06d"%m['timestamp'], 'A:%s'%m[access], 'L:%s'%m[lead_out], '%03d%%'%m['confidence'], "%03d"%m['length']
+    print("RAW:", m['name'], m['freq'], "%06d"%m['timestamp'], 'A:%s'%m[access], 'L:%s'%m[lead_out], '%03d%%'%m['confidence'], "%03d"%m['length'])
 
 def read_file(filenames):
     messages = []

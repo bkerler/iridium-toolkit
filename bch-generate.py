@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # vim: set ts=4 sw=4 tw=0 et pm=:
 import sys
 import re
@@ -27,8 +27,8 @@ rest=genpoly-max
 
 t=int(remainder[1])
 
-print "BCH: m=",size,"t=",t
-print "will have ",size*t,"or less check bits"
+print("BCH: m=",size,"t=",t)
+print("will have ",size*t,"or less check bits")
 
 # Primitive polys from http://mathworld.wolfram.com/PrimitivePolynomial.html
 #1	1+x
@@ -43,20 +43,20 @@ print "will have ",size*t,"or less check bits"
 #4: 10011 11001
 #5: 100101 101001 101111 111101 111011 110111
 
-print "Genrator poly is=",poly(genpoly)
+print("Genrator poly is=",poly(genpoly))
 
 #
 # Generate Field
 #
 if(verbose):
-	print "Using equivalence of x^%d = %s"%(size,poly(rest)),"to generate field"
+	print("Using equivalence of x^%d = %s"%(size,poly(rest)),"to generate field")
 ctr=1
 p=1
 field=[0]*(max+1)
 
 while(ctr<=max):
 	if (verbose):
-		print "%3d (x^%d) = %s"%(ctr,ctr-1,poly(p))
+		print("%3d (x^%d) = %s"%(ctr,ctr-1,poly(p)))
 	field[ctr]=p
 	ctr+=1
 	p<<=1
@@ -64,7 +64,7 @@ while(ctr<=max):
 	  p=p^genpoly # same as (p-max)^rest
 
 if verbose:
-	print
+	print()
 
 
 #
@@ -82,7 +82,7 @@ def polysum(a,ary):
 def linsolve(ary):
 	# solve linear problem over GF(2^n)
 	# bruetforce this :)
-	for c in xrange(1,pow(2,len(ary))):
+	for c in range(1,pow(2,len(ary))):
 		ps=polysum(c,ary)
 	#	print c,"=>",ps
 		if(ps==0):
@@ -90,24 +90,24 @@ def linsolve(ary):
 	
 
 mplist=[]
-for x in xrange(0,t): # generate first t minimal polys
+for x in range(0,t): # generate first t minimal polys
 	m=x*2+1
 	if verbose:
-		print "finding minmal poly ",m
+		print("finding minmal poly ",m)
 	lgs=[]
-	for grade in xrange(size+1): # gather all potentcies of x^m
+	for grade in range(size+1): # gather all potentcies of x^m
 		idx=1+m*grade
 		idx%=max
 		if (verbose):
-			print "%2d"%(idx),("= {0:%db}"%size).format(field[idx])
+			print("%2d"%(idx),("= {0:%db}"%size).format(field[idx]))
 		lgs.append(field[idx])
 
 	mp=linsolve(lgs)
-	print "mp(%d)="%m,poly(mp)
+	print("mp(%d)="%m,poly(mp))
 	mplist.append(mp)
 
 if(verbose):
-	print "bch poly is ", "*".join(["("+poly(x)+")" for x in mplist])," "
+	print("bch poly is ", "*".join(["("+poly(x)+")" for x in mplist])," ")
 
 #multiply all minimal polys together
 result=1
@@ -116,6 +116,6 @@ for mp in mplist:
 
 resultbin="{0:b}".format(result)
 checkbits=len(resultbin)-1
-print "BCH(%d,%d)="%(max-1,max-1-checkbits)
-print poly(result)," (%d)"%result
+print("BCH(%d,%d)="%(max-1,max-1-checkbits))
+print(poly(result)," (%d)"%result)
 

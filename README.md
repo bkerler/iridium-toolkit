@@ -1,75 +1,81 @@
-# Simple toolset to decode Iridium signals
+# Simple toolkit to decode Iridium signals
 
-### Requisites:
+### Requisites
 
- * python (2.7)
- * numpy (scipy)
- * perl (5.x)
+ * Python (2.7)
+ * NumPy (scipy)
 
-### Licence
+### License
 
-Unless otherwise noted in a file, everyting here is 
-(c) Sec & schneider 
-and licenced under the 2-Clause BSD Licence
+Unless otherwise noted in a file, everything here is (c) Sec & schneider and licensed under the 2-Clause BSD License
 
 ### Example usage
+Either extract some Iridium frames from the air or a file using [gr-iridium](https://github.com/muccc/gr-iridium) (recommended) or use the legacy code located in the [extractror-python](extractor-python/) directory if you don't want to install GNURadio (not recommended).
 
-record with usrp. So far we've used two settings:
+It is assumed that the output of the extractor has been written to `output.bits`. Iridium frames can be decoded with
 
-The catch-all interesting stuff
- * center frequency: 1626270833
- * sample rate: 2000000 (2M)
+    python2 iridium-parser.py -p output.bits
 
-or to just catch pager channel stuff and smaller files:
- * center frequency: 1626440000
- * sample rate: 250000 (250k)
+if you want to speed up that step you can install `pypy` and instead run
 
-The output files are named
+    pypy iridium-parser.py -p output.bits
 
-<date>-vX.raw
+### Frame extraction
+See  [gr-iridium](https://github.com/muccc/gr-iridium) (recommended) or [extractor-python](extractor-python/) (not recommended) on how to extract Iridium frames from raw data.
 
-X is the X'th file of the day
-the v is replaces with an s on the "narrow" receive settings
+### Voice Decoding
+To listen to voice calls, you will need an AMBE decoder. There are two option:
+ - Use tnt's open source AMBE decoder: http://git.osmocom.org/osmo-ir77/tree/codec (`git clone http://git.osmocom.org/osmo-ir77`)
+ - Extract an AMBE decoder from a firmware binary. Have a look at the [documentation](ambe_emu/Readme.md) in the `ambe_emu/` directory.
 
+The easier option is to use tnt's AMBE decoder. You can use the extracted decoder if you want to create bit correct output. There almost no audible difference between the two options. Make sure that either `ir77_ambe_decode` or `ambe` is in your `PATH`. Also select the installed one in `play-iridium-ambe`.
 
-To process them, there are three stages:
+Make sure that the main folder of the toolkit is in your `PATH` variable: `export PATH=$PATH:<this directory>`
 
-#### stage1:
+Steps to decode voice:
+ - Decode your captured and demodulated bits using `iridium-parser` and put the result into a file: `pypy iridium-parser.py output.bits > output.parsed`
+ - Use `stats-voc.py` to see streams of captured voice frames: `./stats-voc.py output.parsed`
+ - Click once left and once right to select an area. `stats-voc.py` will try do decode and play the selected samples using the `play-iridium-ambe` script.
 
-`detector-fft.py <rawfilename>`
+### Frame Format
+Partial documentation: http://wiki.muc.ccc.de/iridium:toolkit#frame_format
 
-this searches through the file in 5ms steps to scan for activity
-and copies these parts into snippets called <rawfilename>-<timestamp>.det
+### Main Components
 
-#### stage2:
+#### Parser
 
-`cut-and-downmix.py <detectorfile>`
+`iridium-parser.py`
 
-this mixes the signal down to 0Hz and cuts the beginning to match
-the signal exactly. Output is <detfile>-f<frequency>.cut
+Takes the demodulated bits and tries to parse them into a readable format.
 
-#### stage3:
+Supports some different output formats (`-o` option).
 
-`demod.py`
+#### mkkml
 
-this does manual dqpsk demodulation of the signal and outputs
-<cutfile>.peaks (for debugging)
-<cutfile>.data the raw bitstream
-and on stdout an ascii summary line.
+`mkkml`
 
-#### stage4: 
+Converts IRA frames to a kml file to be viewed in google earth.
 
-gather all the ascii bits in a single file <rawfilename>.bits
+Run as `grep ^IRA output.parsed |perl mkkml tracks > output.kml` to display satellite tracks
 
-### To simplify running these tools, there is doit.pl
+Run as `grep ^IRA output.parsed |perl mkkml heatmap > output.kml` to create a heatmap of sat positions and downlink positions
 
-it runs stage1 (if requested)
-then
-it runs stage2/3 per output of stage1, up to $ncpu times in paralell
-then
-run stage4 (if requested)
+#### Reassembler
 
-run it as `doit.pl [-1234] rawfilename`
+`reassembler.py`
 
-if you give no options, it tries to autodetect what stages
-haven't yet run
+Takes the parsed bits (from `iridium-parser.py`) and reassembles them into higher level protocols.
+
+Supports different modes with the `-m` option.
+
+Usage: (it is assumed that the output from iridium-parser is in `output.parsed`)
+
+    reassembler.py -i output.parsed -m <mode>
+
+Supported modes are currently:
+
+* `ida` - outputs Um Layer 3 messages as hex
+* `lap` - GSM-compatible L3 messages as GSMtap compatible `.pcap`
+* `page` - paging requests (Ring Alert Channel)
+* `msg` - Pager messages
+

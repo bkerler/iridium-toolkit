@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # vim: set ts=4 sw=4 tw=0 et pm=:
 
-# Parses .bits files and displays how many messages have
-# been received over time. Usefull to tune a receiving setup
+# Parses .bits files and displays the distribution
+# of the length of received frames
 
 import sys
 import matplotlib.pyplot as plt
@@ -10,22 +10,22 @@ import getopt
 
 import bitutils
 
-options, remainder = getopt.getopt(sys.argv[1:], 's:l:eo', [
-                                                         'span=',
-                                                         'minimum_length=',
+options, remainder = getopt.getopt(sys.argv[1:], 'b:c:eo', [
+                                                         'bin=',
+                                                         'minimum_confidence=',
                                                          'errors',
                                                          'lead_out_required'
                                                          ])
-span = 3600
-minimum_length = 0
+bin_size = 1
+minimum_confidence = 0
 lead_out_required = False
 show_errors = False
 
 for opt, arg in options:
-    if opt in ('-s', '--span'):
-        span = int(arg)
-    elif opt in ('-l', '--minimum_length'):
-        minimum_length = int(arg)
+    if opt in ('-b', '--bin'):
+        bin_size = int(arg)
+    elif opt in ('-c', '--minimum_confidence'):
+        minimum_confidence = int(arg)
     elif opt in ('-o', '--lead_out_required'):
         lead_out_required = True
     elif opt in ('-e', '--errors'):
@@ -36,15 +36,12 @@ for opt, arg in options:
 
 messages = bitutils.read_file(remainder)
 
-timestamps = [s['timestamp'] for s in messages if s['length'] > minimum_length and (not lead_out_required or s['lead_out']) and (s['error'] == show_errors)]
+lens = [s['length'] for s in messages if s['length'] > 100 and s['confidence'] > minimum_confidence and (s['lead_out'] or not lead_out_required) and (s['error'] == show_errors) and s['freq'] < 1.626e9]
 
-t0 = min(timestamps)
-t = max(timestamps)
-
-bins = (t - t0)/span
+bins = (max(lens) - min(lens))/bin_size
 
 filename=["<stdin>",",".join(remainder)][remainder is None]
-title = "File: %s : Messages per %d seconds, longer than %d symbols" % (filename, span, minimum_length)
+title = "File: %s : Distribution of message length. Bin Size: %d, Minimum Confidence: %d" % (filename, bin_size, minimum_confidence)
 if lead_out_required:
     title += ', lead out needs to be present'
 else:
@@ -53,5 +50,5 @@ if show_errors:
     title += " and having decoding errors"
 
 plt.title(title)
-plt.hist(timestamps, int(bins))
+plt.hist(lens, bins)
 plt.show()

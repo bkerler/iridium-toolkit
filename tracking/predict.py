@@ -20,12 +20,12 @@ def loadTLE(filename):
         l1 = f.readline()
 
     f.close()
-    print "%i satellites loaded into list"%len(satlist)
+    print("%i satellites loaded into list"%len(satlist))
     return satlist
 
 def print_sat(date, sat):
-    print('%s %20s: altitude %4.1f deg, azimuth %5.1f deg, range %5.1f km' %
-        (date, sat.name, sat.alt * degrees_per_radian, sat.az * degrees_per_radian, sat.range/1000.))
+    print(('%s %20s: altitude %4.1f deg, azimuth %5.1f deg, range %5.1f km' %
+        (date, sat.name, sat.alt * degrees_per_radian, sat.az * degrees_per_radian, sat.range/1000.)))
 
 satlist = loadTLE(sys.argv[1])
 
@@ -36,7 +36,7 @@ home.elevation = 519 # meters
 
 near_list = []
 t = datetime.datetime.utcnow()
-print 'All times in UTC!'
+print('All times in UTC!')
 
 for dt in range(3600 * int(sys.argv[2])):
     home.date = t + datetime.timedelta(seconds = dt)
