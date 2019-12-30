@@ -2,7 +2,7 @@
 
 ### Requisites
 
- * Python (2.7)
+ * Python (3.x)
  * NumPy (scipy)
 
 ### License
@@ -14,7 +14,7 @@ Either extract some Iridium frames from the air or a file using [gr-iridium](htt
 
 It is assumed that the output of the extractor has been written to `output.bits`. Iridium frames can be decoded with
 
-    python2 iridium-parser.py -p output.bits
+    python3 iridium-parser.py -p output.bits
 
 if you want to speed up that step you can install `pypy` and instead run
 

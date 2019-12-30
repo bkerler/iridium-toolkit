@@ -15,6 +15,10 @@ ifile= None
 ofile= None
 mode= "undef"
 
+if len(sys.argv)<2:
+	print("Usage: ./reassembler.py -i [input.parsed] -m [mode:ida,msg,lap,page] -o [output.txt]")
+	exit(0)
+
 options, remainder = getopt.getopt(sys.argv[1:], 'vi:o:m:', [
                                                          'verbose',
                                                          'input=',
@@ -197,8 +201,10 @@ class ReassembleIDA(Reassemble):
                 break
     def end(self):
         super(ReassembleIDA,self).end()
-        print("%d valid packets assembled from %d fragments (1:%1.2f)."%(self.stat_ok,self.stat_fragments,((float)(self.stat_fragments)/self.stat_ok)))
-        print("%d/%d (%3.1f%%) broken fragments."%(self.stat_broken,self.stat_fragments,(100.0*self.stat_broken/self.stat_fragments)))
+        if self.stat_fragments>0:
+        	print("%d valid packets assembled from %d fragments (1:%1.2f)."%(self.stat_ok,self.stat_fragments,((float)(self.stat_fragments)/self.stat_ok)))
+        if self.stat_broken>0:
+        	print("%d/%d (%3.1f%%) broken fragments."%(self.stat_broken,self.stat_fragments,(100.0*self.stat_broken/self.stat_fragments)))
         print("%d dupes removed."%(self.stat_dupes))
     def consume(self,q):
         (data,time,ul,level)=q
